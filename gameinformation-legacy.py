@@ -170,8 +170,6 @@ def save_tips(data):
                     f.write(tip)
                     f.write("\n")
 
-            f.write("\n")
-
     print("[+] saved info/tips.txt")
 
 
