@@ -137,7 +137,10 @@ def save_tips(data):
             text = data[lang]
 
             # 原数据使用 / 分隔
-            tips = text.split("/")
+            if "\n" in text:
+                tips = text.split("\n")
+            else:
+                tips = text.split("/")
 
             for tip in tips:
                 tip = tip.strip()
