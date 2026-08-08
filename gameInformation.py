@@ -1,6 +1,8 @@
 import json
 import os
+from pathlib import Path
 import sys
+import tempfile
 from UnityPy import Environment
 import zipfile
 from io import BytesIO
@@ -15,10 +17,25 @@ def run(path, logger):
         typetree = json.load(f)
     env = Environment()
     with zipfile.ZipFile(path) as apk:
-        with apk.open("assets/bin/Data/globalgamemanagers.assets") as f:
-            env.load_file(
-                BytesIO(f.read()), name="assets/bin/Data/globalgamemanagers.assets"
-            )
+        try:
+            with apk.open("assets/bin/Data/globalgamemanagers.assets") as f:
+                env.load_file(
+                    BytesIO(f.read()), name="assets/bin/Data/globalgamemanagers.assets"
+                )
+        except KeyError:
+            with tempfile.TemporaryDirectory() as tmp:
+                tmp = Path(tmp)
+
+                print("[+] extracting assets")
+
+                for info in apk.infolist():
+                    if info.filename.startswith("assets/"):
+                        apk.extract(info, tmp)
+
+                print("[+] loading assets folder")
+
+                env.load_folder(tmp / "assets")
+
         for i in range(100):
             try:
                 with apk.open(f"assets/bin/Data/level{i}") as f:
