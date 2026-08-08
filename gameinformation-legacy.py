@@ -1,7 +1,8 @@
 import os
+from pathlib import Path
 import sys
+import tempfile
 import zipfile
-from io import BytesIO
 
 from UnityPy import Environment
 
@@ -74,44 +75,19 @@ def load_apk_assets(path):
 
     env = Environment()
 
-    with zipfile.ZipFile(path) as apk:
-        # globalgamemanagers.assets + split0~6
-        print("[+] loading globalgamemanagers")
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp = Path(tmp)
 
-        data = BytesIO()
+        print("[+] extracting assets")
 
-        files = ["assets/bin/Data/globalgamemanagers.assets"]
+        with zipfile.ZipFile(path) as apk:
+            for info in apk.infolist():
+                if info.filename.startswith("assets/"):
+                    apk.extract(info, tmp)
 
-        files.extend(
-            [f"assets/bin/Data/globalgamemanagers.assets.split{i}" for i in range(7)]
-        )
+        print("[+] loading assets folder")
 
-        for file in files:
-            try:
-                print("   ", file)
-
-                data.write(apk.read(file))
-
-            except KeyError:
-                print("missing:", file)
-
-        data.seek(0)
-
-        env.load_file(data.read(), name="globalgamemanagers.assets")
-
-        # level0 ~ level14
-        print("[+] loading levels")
-
-        for i in range(15):
-            file = f"assets/bin/Data/level{i}"
-
-            try:
-                print("   ", file)
-
-                env.load_file(apk.read(file), name=file)
-
-            except KeyError:
-                pass
+        env.load_folder(tmp / "assets")
 
     return env
 
